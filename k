@@ -1,22 +1,54 @@
-#!/bin/bash
+#!/usr/bin/env fish
 
-set -eu
+function usage
+    echo 'usage: k [options] <command>'
+    echo
+    echo 'options:'
+    echo '  -h | --help  Show this help'
+    echo
+    echo 'commands:'
+    echo '  add'
+    echo '  remove | rm'
+    echo '  list | ls'
+    exit 1
+end
 
-cmd=$1; shift
+function add -a profile
+    test -n "$profile"
+    or usage
+    ln -fs ~/bin/kubectl.wrapper ~/bin/kubectl.$profile
+    echo "complete -c kubectl.$profile -w kubectl" >~/.config/fish/completions/kubectl.$profile.fish
+end
 
-case $cmd in
-add)
-  profile=${1?usage: k add <profile>}; shift
-  ln -s ~/bin/kubectl.wrapper ~/bin/kubectl.$profile
-  ;;
-remove)
-  profile=${1?usage: k remove <profile>}; shift
-  rm ~/bin/kubectl.$profile
-  ;;
-ls|list)
-  (cd ~/bin && ls kubectl.*) | grep -v kubectl.wrapper | sed 's|^kubectl\.||'
-  ;;
-*)
-  echo >&2 unsupported: $cmd
-  exit 1
-esac
+function remove -a profile
+    test -n "$profile"
+    or usage
+    set profile $argv[1]
+    rm ~/bin/kubectl.$profile
+    rm -f ~/.config/fish/completions/kubectl.$profile.fish
+end
+
+function list
+    begin
+        cd ~/bin
+        ls kubectl.*
+    end | grep -v kubectl.wrapper | sed 's|^kubectl\.||'
+end
+
+function parse -a cmd
+    test -n "$cmd"
+    or usage
+
+    switch $cmd
+        case add
+            add $argv[2..-1]
+        case remove rm
+            remove $argv[2..-1]
+        case ls list
+            list
+        case '*'
+            usage
+    end
+end
+
+parse $argv
