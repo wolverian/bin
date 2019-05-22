@@ -1,2 +1,3 @@
 kubectl.*
 !kubectl.wrapper
+idea
