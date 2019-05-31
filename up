@@ -1,0 +1,6 @@
+#!/usr/bin/env fish
+
+brew update >/dev/null
+brew outdated
+brew cask outdated
+mas outdated
