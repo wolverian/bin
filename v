@@ -74,7 +74,7 @@ CONFIG
 	if ! aws-vault list --profiles | grep -q "$federation_account_name"; then
 		aws-configure --profile "$federation_account_name" set region eu-west-1
 		aws configure --profile "$federation_account_name" set mfa_serial "arn:aws:iam::$federation_account_id:mfa/$user_login"
-		aws-vault add vrk-federation
+		aws-vault add "$federation_account_name"
 	fi
 }
 
