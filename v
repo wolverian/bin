@@ -106,7 +106,7 @@ v_kubectl() {
 	local profile=${1?usage: $me kubectl <profile>}
 	shift
 
-	export KUBECONFIG=${HOME}/.kube/config-$profile
+	export KUBECONFIG=$HOME/.kube/config-$profile
 
 	if [[ ! -e "$KUBECONFIG" ]]; then
 		aws-vault exec "$profile" -- aws eks update-kubeconfig --name EKS-Cluster
