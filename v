@@ -12,7 +12,7 @@ main() {
 	shift
 
 	case $cmd in
-	c | conf | config | configure) v_configure ;;
+	c | conf | config | configure) v_config ;;
 	pc | print-config) v_print_config ;;
 	add) v_add "$@" ;;
 	ls | list) aws-vault list ;;
@@ -52,7 +52,7 @@ USAGE
 	exit 1
 }
 
-v_configure() {
+v_config() {
 	local federation_account_name federation_account_id target_role_name user_login region
 
 	read -erp "Federation account name: " federation_account_name
