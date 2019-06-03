@@ -25,7 +25,7 @@ main() {
 }
 
 check_params() {
-	if [[ $# < 1 || $1 =~ "help" ]]; then
+	if [[ $# -lt 1 || $1 =~ "help" ]]; then
 		usage
 	fi
 }
