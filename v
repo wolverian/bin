@@ -12,14 +12,14 @@ main() {
 	shift
 
 	case $cmd in
-	c | conf | config | configure) configure ;;
-	pc | print-config) print_config ;;
-	add) add "$@" ;;
+	c | conf | config | configure) v_configure ;;
+	pc | print-config) v_print_config ;;
+	add) v_add "$@" ;;
 	ls | list) aws-vault list ;;
-	aws) aws "$@" ;;
-	k | kube | kubectl) kubectl "$@" ;;
-	s | sh | shell) shell "$@" ;;
-	e | ex | exec) execute "$@" ;;
+	aws) v_aws "$@" ;;
+	k | kube | kubectl) v_kubectl "$@" ;;
+	s | sh | shell) v_shell "$@" ;;
+	e | ex | exec) v_execute "$@" ;;
 	*) usage ;;
 	esac
 }
@@ -52,21 +52,23 @@ USAGE
 	exit 1
 }
 
-configure() {
-	local federation_account_name federation_account_id target_role_name user_login
+v_configure() {
+	local federation_account_name federation_account_id target_role_name user_login region
 
 	read -erp "Federation account name: " federation_account_name
 	read -erp "Federation account ID: " federation_account_id
 	read -erp "Target role name: " target_role_name
 	read -erp "User log-in: " user_login
+	read -erp "Region: " region
 
 	mkdir -p "$(dirname "$config_file")"
 
 	cat >"$config_file" <<CONFIG
-federation_account_name=${federation_account_name}
-federation_account_id=${federation_account_id}
-target_role_name=${target_role_name}
-user_login=${user_login}
+federation_account_name=$federation_account_name
+federation_account_id=$federation_account_id
+target_role_name=$target_role_name
+user_login=$user_login
+region=$region
 CONFIG
 
 	if ! aws-vault list --profiles | grep -q "$federation_account_name"; then
@@ -76,32 +78,32 @@ CONFIG
 	fi
 }
 
-print_config() {
+v_print_config() {
 	cat "$config_file"
 }
 
-add() {
+v_add() {
   # shellcheck disable=SC1090
 	. "$config_file"
 
-	local profile=${1?usage: v add <profile> <account id>}
-	local account_id=${2?usage: v add <profile> <account id>}
+	local profile=${1?usage: $me add <profile> <account id>}
+	local account_id=${2?usage: $me add <profile> <account id>}
 
-	aws configure --profile "$profile" set region eu-west-1
+	aws configure --profile "$profile" set region "$region"
 	aws configure --profile "$profile" set source_profile "$federation_account_name"
 	aws configure --profile "$profile" set role_arn "arn:aws:iam::$account_id:role/$target_role_name"
 	aws configure --profile "$profile" set mfa_serial "arn:aws:iam::$federation_account_id:mfa/$user_login"
 }
 
-aws() {
-	local profile=${1?usage: "$me" aws <profile>}
+v_aws() {
+	local profile=${1?usage: $me aws <profile>}
 	shift
 
 	exec "$me" exec "$profile" aws "$@"
 }
 
-kubectl() {
-	local profile=${1?usage: "$me" kubectl <profile>}
+v_kubectl() {
+	local profile=${1?usage: $me kubectl <profile>}
 	shift
 
 	export KUBECONFIG=${HOME}/.kube/config-$profile
@@ -113,15 +115,15 @@ kubectl() {
 	aws-vault exec "$profile" -- kubectl "$@"
 }
 
-shell() {
-	local profile=${1?usage: "$me" shell <profile>}
+v_shell() {
+	local profile=${1?usage: $me shell <profile>}
 	shift
 
 	aws-vault exec "$profile" -- "$SHELL"
 }
 
-execute() {
-	local profile=${1?usage: "$me" exec <profile>}
+v_execute() {
+	local profile=${1?usage: $me exec <profile>}
 	shift
 
 	aws-vault exec "$profile" -- "$@"
