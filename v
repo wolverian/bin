@@ -60,7 +60,7 @@ configure() {
 	read -erp "Target role name: " target_role_name
 	read -erp "User log-in: " user_login
 
-	mkdir -p $(dirname $config_file)
+	mkdir -p "$(dirname $config_file)"
 
 	cat >$config_file <<CONFIG
 federation_account_name=${federation_account_name}
