@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
-set -eu
+set -o errexit
+set -o nounset
+set -o pipefail
 
 me=$(basename "$0")
 config_file=$HOME/.config/v/config.sh
