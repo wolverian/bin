@@ -3,48 +3,104 @@
 set -eu
 
 me=$(basename $0)
+config_file=$HOME/.config/v/config.sh
 
-if [[ $# < 1 || $1 =~ "help" ]]; then
-	echo >&2 "usage: $me <command>"
-	echo >&2
-	echo >&2 "$me kubectl"
-	echo >&2 "$me exec"
-	echo >&2 "$me shell"
-	echo >&2
-	echo >&2 "$me add"
-	echo >&2 "$me list"
-	echo >&2 "$me kubectl"
+main() {
+	check_params "$@"
+
+	local cmd=$1
+	shift
+
+	case $cmd in
+	c | conf | config | configure) configure ;;
+	pc | print-config) print_config ;;
+	add) add "$@" ;;
+	ls | list) aws-vault list ;;
+	aws) aws "$@" ;;
+	k | kube | kubectl) kubectl "$@" ;;
+	s | sh | shell) shell "$@" ;;
+	e | ex | exec) execute "$@" ;;
+	*) usage ;;
+	esac
+}
+
+check_params() {
+	if [[ $# < 1 || $1 =~ "help" ]]; then
+		usage
+	fi
+}
+
+usage() {
+	cat >&2 <<USAGE
+usage: $me <command>
+
+Get started:
+  $me config
+  $me print-config
+
+Manage accounts:
+  $me add
+  $me list
+
+Work in target accounts:
+  $me kubectl
+  $me aws
+  $me shell
+  $me exec
+USAGE
+
 	exit 1
-fi
+}
 
-cmd=$1
-shift
+configure() {
+	local federation_account_name federation_account_id target_role_name user_login
 
-case $cmd in
-add)
+	read -erp "Federation account name: " federation_account_name
+	read -erp "Federation account ID: " federation_account_id
+	read -erp "Target role name: " target_role_name
+	read -erp "User log-in: " user_login
 
-	profile=$1
-	account_id=$2
-	user_login=$3
+	mkdir -p $(dirname $config_file)
+
+	cat >$config_file <<CONFIG
+federation_account_name=${federation_account_name}
+federation_account_id=${federation_account_id}
+target_role_name=${target_role_name}
+user_login=${user_login}
+CONFIG
+
+	if ! aws-vault list --profiles | grep -q $federation_account_name; then
+		aws-configure --profile $federation_account_name set region eu-west-1
+		aws configure --profile $federation_account_name set mfa_serial arn:aws:iam::${federation_account_id}:mfa/$user_login
+		aws-vault add vrk-federation
+	fi
+}
+
+print_config() {
+	cat $config_file
+}
+
+add() {
+	. $config_file
+
+	local profile=${1?usage: v add <profile> <account id>}
+	local account_id=${2?usage: v add <profile> <account id>}
 
 	aws configure --profile $profile set region eu-west-1
-	aws configure --profile $profile set source_profile vrk-federation
-	aws configure --profile $profile set role_arn arn:aws:iam::$account_id:role/VRKCloudAdmin
-	aws configure --profile $profile set mfa_serial arn:aws:iam::200875756628:mfa/$user_login
+	aws configure --profile $profile set source_profile $federation_account_name
+	aws configure --profile $profile set role_arn arn:aws:iam::$account_id:role/${target_role_name}
+	aws configure --profile $profile set mfa_serial arn:aws:iam::${federation_account_id}:mfa/$user_login
+}
 
-	aws-vault add $profile
+aws() {
+	local profile=${1?usage: $me aws <profile>}
+	shift
 
-	;;
+	exec $me exec $profile aws "$@"
+}
 
-ls | list)
-
-	aws-vault list
-
-	;;
-
-k | kube | kubectl)
-
-	profile=$1
+kubectl() {
+	local profile=${1?usage: v kubectl <profile>}
 	shift
 
 	export KUBECONFIG=${HOME}/.kube/config-${profile}
@@ -54,31 +110,20 @@ k | kube | kubectl)
 	fi
 
 	aws-vault exec $profile -- kubectl "$@"
+}
 
-	;;
-
-s | sh | shell)
-
-	profile=$1
+shell() {
+	local profile=${1?usage: v shell <profile>}
 	shift
 
 	aws-vault exec $profile -- $SHELL
+}
 
-	;;
-
-e | ex | exec)
-
-	profile=$1
+execute() {
+	local profile=${1?usage: v exec <profile>}
 	shift
 
 	aws-vault exec $profile -- "$@"
+}
 
-	;;
-
-*)
-
-	echo >&2 "unsupported: $cmd"
-	exit 1
-
-	;;
-esac
+main "$@"
