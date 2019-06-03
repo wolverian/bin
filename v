@@ -2,7 +2,7 @@
 
 set -eu
 
-me=$(basename $0)
+me=$(basename "$0")
 config_file=$HOME/.config/v/config.sh
 
 main() {
@@ -60,70 +60,71 @@ configure() {
 	read -erp "Target role name: " target_role_name
 	read -erp "User log-in: " user_login
 
-	mkdir -p "$(dirname $config_file)"
+	mkdir -p "$(dirname "$config_file")"
 
-	cat >$config_file <<CONFIG
+	cat >"$config_file" <<CONFIG
 federation_account_name=${federation_account_name}
 federation_account_id=${federation_account_id}
 target_role_name=${target_role_name}
 user_login=${user_login}
 CONFIG
 
-	if ! aws-vault list --profiles | grep -q $federation_account_name; then
-		aws-configure --profile $federation_account_name set region eu-west-1
-		aws configure --profile $federation_account_name set mfa_serial arn:aws:iam::${federation_account_id}:mfa/$user_login
+	if ! aws-vault list --profiles | grep -q "$federation_account_name"; then
+		aws-configure --profile "$federation_account_name" set region eu-west-1
+		aws configure --profile "$federation_account_name" set mfa_serial "arn:aws:iam::$federation_account_id:mfa/$user_login"
 		aws-vault add vrk-federation
 	fi
 }
 
 print_config() {
-	cat $config_file
+	cat "$config_file"
 }
 
 add() {
-	. $config_file
+  # shellcheck disable=SC1090
+	. "$config_file"
 
 	local profile=${1?usage: v add <profile> <account id>}
 	local account_id=${2?usage: v add <profile> <account id>}
 
-	aws configure --profile $profile set region eu-west-1
-	aws configure --profile $profile set source_profile $federation_account_name
-	aws configure --profile $profile set role_arn arn:aws:iam::$account_id:role/${target_role_name}
-	aws configure --profile $profile set mfa_serial arn:aws:iam::${federation_account_id}:mfa/$user_login
+	aws configure --profile "$profile" set region eu-west-1
+	aws configure --profile "$profile" set source_profile "$federation_account_name"
+	aws configure --profile "$profile" set role_arn "arn:aws:iam::$account_id:role/$target_role_name"
+	aws configure --profile "$profile" set mfa_serial "arn:aws:iam::$federation_account_id:mfa/$user_login"
 }
 
 aws() {
-	local profile=${1?usage: $me aws <profile>}
+	local profile=${1?usage: "$me" aws <profile>}
 	shift
 
-	exec $me exec $profile aws "$@"
+	exec "$me" exec "$profile" aws "$@"
 }
 
 kubectl() {
-	local profile=${1?usage: v kubectl <profile>}
+	local profile=${1?usage: "$me" kubectl <profile>}
 	shift
 
-	export KUBECONFIG=${HOME}/.kube/config-${profile}
+	export KUBECONFIG=${HOME}/.kube/config-$profile
 
-	if [[ ! -e $KUBECONFIG ]]; then
-		aws-vault exec $profile -- aws eks update-kubeconfig --name EKS-Cluster
+	if [[ ! -e "$KUBECONFIG" ]]; then
+		aws-vault exec "$profile" -- aws eks update-kubeconfig --name EKS-Cluster
 	fi
 
-	aws-vault exec $profile -- kubectl "$@"
+	aws-vault exec "$profile" -- kubectl "$@"
 }
 
 shell() {
-	local profile=${1?usage: v shell <profile>}
+	local profile=${1?usage: "$me" shell <profile>}
 	shift
 
-	aws-vault exec $profile -- $SHELL
+	aws-vault exec "$profile" -- "$SHELL"
 }
 
 execute() {
-	local profile=${1?usage: v exec <profile>}
+	local profile=${1?usage: "$me" exec <profile>}
 	shift
 
-	aws-vault exec $profile -- "$@"
+	aws-vault exec "$profile" -- "$@"
 }
 
 main "$@"
