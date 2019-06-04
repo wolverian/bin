@@ -85,9 +85,9 @@ v_print_config() {
 }
 
 v_add() {
-  local region federation_account_name federation_account_id target_role_name user_login
+	local region federation_account_name federation_account_id target_role_name user_login
 
-  # shellcheck disable=SC1090
+	# shellcheck disable=SC1090
 	. "$config_file"
 
 	local profile=${1?usage: $me add <profile> <account id>}
