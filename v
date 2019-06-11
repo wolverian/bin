@@ -19,6 +19,7 @@ main() {
 	add) v_add "$@" ;;
 	ls | list) aws-vault list ;;
 	aws) v_aws "$@" ;;
+	t | tf | terraform) v_terraform "$@" ;;
 	k | kube | kubectl) v_kubectl "$@" ;;
 	s | sh | shell) v_shell "$@" ;;
 	e | ex | exec) v_execute "$@" ;;
@@ -47,6 +48,7 @@ Manage accounts:
 Work in target accounts:
   $me kubectl
   $me aws
+  $me terraform
   $me shell
   $me exec
 USAGE
@@ -104,6 +106,13 @@ v_aws() {
 	shift
 
 	exec "$me" exec "$profile" aws "$@"
+}
+
+v_terraform() {
+  local profile=${1?usage: $me terraform <profile>}
+  shift
+
+  exec "$me" exec "$profile" terraform "$@"
 }
 
 v_kubectl() {
