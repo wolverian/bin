@@ -1,8 +1,8 @@
-#!/bin/zsh
+#!/bin/sh
 
 set -eu
 
-if [[ $#@ -gt 1 ]]; then
+if [ $# -gt 1 ]; then
   echo >&2 "usage: $0 [doit]"
   exit 1
 fi
@@ -14,7 +14,7 @@ brew outdated
 brew cask outdated
 command -v mas >/dev/null && mas outdated
 
-if [[ -n $doit ]]; then
+if [ -n "$doit" ]; then
   brew upgrade
   brew cask upgrade
   command -v mas >/dev/null && mas upgrade

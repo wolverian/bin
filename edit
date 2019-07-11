@@ -1,3 +1,3 @@
-#!/bin/zsh
+#!/bin/sh
 
-${EDITOR:-vi} $(which $@)
+${EDITOR:-vi} "$(command -v "$@")"
