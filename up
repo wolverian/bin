@@ -1,6 +1,21 @@
-#!/usr/bin/env fish
+#!/bin/zsh
+
+set -eu
+
+if [[ $#@ -gt 1 ]]; then
+  echo >&2 "usage: $0 [doit]"
+  exit 1
+fi
+
+doit=${1:-""}
 
 brew update >/dev/null
 brew outdated
 brew cask outdated
-mas outdated
+command -v mas >/dev/null && mas outdated
+
+if [[ -n $doit ]]; then
+  brew upgrade
+  brew cask upgrade
+  command -v mas >/dev/null && mas upgrade
+fi
