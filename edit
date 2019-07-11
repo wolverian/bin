@@ -1,0 +1,3 @@
+#!/bin/zsh
+
+${EDITOR:-vi} $(which $@)
