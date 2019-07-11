@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 set -o errexit
 set -o nounset
@@ -60,11 +60,11 @@ USAGE
 v_config() {
   local federation_account_name federation_account_id target_role_name user_login region
 
-  read -erp "Federation account name: " federation_account_name
-  read -erp "Federation account ID: " federation_account_id
-  read -erp "Target role name: " target_role_name
-  read -erp "User log-in: " user_login
-  read -erp "Region: " region
+  IFS= read -erp "Federation account name: " federation_account_name
+  IFS= read -erp "Federation account ID: " federation_account_id
+  IFS= read -erp "Target role name: " target_role_name
+  IFS= read -erp "User log-in: " user_login
+  IFS= read -erp "Region: " region
 
   mkdir -p "$(dirname "$config_file")"
 
