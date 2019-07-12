@@ -140,6 +140,8 @@ v_execute() {
   local profile=${1?usage: $me exec <profile>}
   shift
 
+  export KUBECONFIG=$HOME/.kube/config-$profile
+
   aws-vault exec ${aws_vault_options} "$profile" -- "$@"
 }
 
