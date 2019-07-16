@@ -1,0 +1,11 @@
+#!/usr/bin/env rc
+
+fn main {
+	switch ($*) {
+		case list { g_list $*2 }
+		case user { g_user $*2 }
+	}
+}
+
+fn g_list {
+	
