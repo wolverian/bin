@@ -11,20 +11,30 @@ aws_vault_options="--assume-role-ttl=1h"
 main() {
   check_params "$@"
 
-  local cmd=$1
-  shift
-
-  case $cmd in
+  case "$1" in
+  # Command pattern: v <command> <args>
   c | conf | config | configure) v_config ;;
   pc | print-config) v_print_config ;;
   add) v_add "$@" ;;
   ls | list) aws-vault list ;;
-  aws) v_aws "$@" ;;
-  t | tf | terraform) v_terraform "$@" ;;
-  k | kube | kubectl) v_kubectl "$@" ;;
-  s | sh | shell) v_shell "$@" ;;
-  e | ex | exec) v_execute "$@" ;;
-  *) usage ;;
+
+  # Command pattern: v <profile> <command> <args>
+  *)
+    [[ $# -gt 1 ]] || usage
+
+    profile=$1
+    shift
+    local command=$1
+    shift
+
+    case "$command" in
+    aws) v_aws "$@" ;;
+    t | tf | terraform) v_terraform "$@" ;;
+    k | kube | kubectl) v_kubectl "$@" ;;
+    s | sh | shell) v_shell "$@" ;;
+    e | ex | exec) v_execute "$@" ;;
+    esac
+    ;;
   esac
 }
 
@@ -103,45 +113,29 @@ v_add() {
 }
 
 v_aws() {
-  local profile=${1?usage: $me aws <profile>}
-  shift
-
-  exec "$me" exec "$profile" aws "$@"
+  v_execute aws "$@"
 }
 
 v_terraform() {
-  local profile=${1?usage: $me terraform <profile>}
-  shift
-
-  exec "$me" exec "$profile" terraform "$@"
+  v_execute terraform "$@"
 }
 
 v_kubectl() {
-  local profile=${1?usage: $me kubectl <profile>}
-  shift
-
   export KUBECONFIG=$HOME/.kube/config-$profile
 
   if [[ ! -e "$KUBECONFIG" ]]; then
     aws-vault exec ${aws_vault_options} "$profile" -- aws eks update-kubeconfig --name EKS-Cluster
   fi
 
-  aws-vault exec ${aws_vault_options} "$profile" -- kubectl "$@"
+  v_execute kubectl "$@"
 }
 
 v_shell() {
-  local profile=${1?usage: $me shell <profile>}
-  shift
-
-  aws-vault exec ${aws_vault_options} "$profile" -- "$SHELL"
+  v_execute "$SHELL"
 }
 
 v_execute() {
-  local profile=${1?usage: $me exec <profile>}
-  shift
-
   export KUBECONFIG=$HOME/.kube/config-$profile
-
   aws-vault exec ${aws_vault_options} "$profile" -- "$@"
 }
 
