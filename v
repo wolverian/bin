@@ -33,6 +33,7 @@ main() {
     k | kube | kubectl) v_kubectl "$@" ;;
     s | sh | shell) v_shell "$@" ;;
     e | ex | exec) v_execute "$@" ;;
+    l | login) v_login "$@" ;;
     esac
     ;;
   esac
@@ -103,8 +104,8 @@ v_add() {
   # shellcheck disable=SC1090
   . "$config_file"
 
-  local profile=${1?usage: $me add <profile> <account id>}
-  local account_id=${2?usage: $me add <profile> <account id>}
+  local profile=${2?usage: $me add <profile> <account id>}
+  local account_id=${3?usage: $me add <profile> <account id>}
 
   aws configure --profile "$profile" set region "$region"
   aws configure --profile "$profile" set source_profile "$federation_account_name"
@@ -137,6 +138,10 @@ v_shell() {
 v_execute() {
   export KUBECONFIG=$HOME/.kube/config-$profile
   aws-vault exec ${aws_vault_options} "$profile" -- "$@"
+}
+
+v_login() {
+  aws-vault login ${aws_vault_options} "$profile"
 }
 
 main "$@"
