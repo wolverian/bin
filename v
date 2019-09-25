@@ -63,6 +63,7 @@ Work in target accounts:
   $me terraform
   $me shell
   $me exec
+  $me login
 USAGE
 
   exit 1
