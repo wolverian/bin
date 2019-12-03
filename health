@@ -1,0 +1,11 @@
+#!/usr/bin/env stack
+-- stack --resolver lts-14.16 script
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE NoImplicitPrelude #-}
+
+import RIO
+
+main :: IO ()
+main = runSimpleApp $ do
+  logInfo "Hello, world!"
+  logInfo "fooo!"
