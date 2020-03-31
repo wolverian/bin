@@ -2,3 +2,4 @@ kubectl.*
 .idea/
 idea
 goland
+aws.*
