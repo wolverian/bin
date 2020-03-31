@@ -2,10 +2,11 @@
 
 use URI;
 
+#| Browse repository in BitBucket.
 sub MAIN(
-  $file? where { !$file.defined or $file.IO.f },
-  Str :$remote-name = "origin",
-  Str :$cmd = "open"
+  $file? where { !$file.defined or $file.IO.f }, #= open a file
+  Str :$remote-name = "origin",                  #= open this bitbucket remote
+  Str :$cmd = "open"                             #= command to run
 ) {
   my $remote = qqx|git remote get-url {$remote-name}|;
   my $u = URI.new($remote.trim);
