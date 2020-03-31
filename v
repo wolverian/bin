@@ -6,7 +6,6 @@ set -o pipefail
 
 me=$(basename "$0")
 config_file=$HOME/.config/v/config.sh
-aws_vault_options="--assume-role-ttl=1h"
 
 main() {
   check_params "$@"
@@ -126,7 +125,7 @@ v_kubectl() {
   export KUBECONFIG=$HOME/.kube/config-$profile
 
   if [[ ! -e "$KUBECONFIG" ]]; then
-    aws-vault exec ${aws_vault_options} "$profile" -- aws eks update-kubeconfig --name EKS-Cluster
+    aws-vault exec "$profile" -- aws eks update-kubeconfig --name EKS-Cluster
   fi
 
   v_execute kubectl "$@"
@@ -138,11 +137,11 @@ v_shell() {
 
 v_execute() {
   export KUBECONFIG=$HOME/.kube/config-$profile
-  aws-vault exec ${aws_vault_options} "$profile" -- "$@"
+  aws-vault exec "$profile" -- "$@"
 }
 
 v_login() {
-  aws-vault login ${aws_vault_options} "$profile"
+  aws-vault login "$profile"
 }
 
 main "$@"
