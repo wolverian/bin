@@ -2,7 +2,11 @@
 
 use URI;
 
-sub MAIN(Str $remote-name = "origin") {
+sub MAIN(
+  $file? where { !$file.defined or $file.IO.f },
+  Str :$remote-name = "origin",
+  Str :$cmd = "open"
+) {
   my $remote = qqx|git remote get-url {$remote-name}|;
   my $u = URI.new($remote.trim);
 
@@ -12,7 +16,12 @@ sub MAIN(Str $remote-name = "origin") {
 
   my ($project, $repo) = $u.path.segments[1,2];
   $repo.=subst(rx|\.git$|, "");
-  $u.path("/projects/{$project}/repos/{$repo}");
 
-  say $u;
+  if $file {
+    $u.path("/projects/{$project}/repos/{$repo}/browse/{$file}");
+  } else {
+    $u.path("/projects/{$project}/repos/{$repo}");
+  }
+
+  shell "$cmd $u";
 }
